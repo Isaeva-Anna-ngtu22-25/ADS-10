@@ -1,53 +1,50 @@
-// Copyright 2022 NNTU-CS
 #ifndef INCLUDE_TREE_H_
 #define INCLUDE_TREE_H_
+#include <iostream>
 #include <vector>
+#include <algorithm>
+struct Node {
+    bool isRoot = false;
+    char val;
+    std::vector<Node*> pointers;
+};
 class Tree {
  private:
-    struct Node {
-        char c;
-        std::vector<Node*> ptr;
-    };
-    std::vector<std::vector<char>> vec;
     Node* root;
-    Node* create(Node* root, std::vector<char> vec) {
-        if (!root)
-            root = new Node;
-        for (int i = 0; i < vec.size(); ++i) {
-            std::vector<char> b = vec;
-            Node* a = new Node;
-            a->c = vec[i];
-            root->ptr.push_back(a);
-            b.erase(b.begin() + i);
-            create(root->ptr[i], b);
+    std::vector<std::vector<char>> perms;
+    void insert(Node* root, const std::vector<char>& vec) {
+        for (char c : vec) {
+            Node* tmp = new Node;
+            tmp->val = c;
+            root->pointers.push_back(tmp);
+            std::vector<char> remainingChars(vec);
+            remainingChars.erase(std::find(remainingChars.begin(), \
+                remainingChars.end(), c));
+            insert(tmp, remainingChars);
         }
-        if (vec.empty())
-            return root;
-        return root;
     }
-    std::vector<char> Perm(Node* root, std::vector<char>* a) {
-        for (int i = 0; i < root->ptr.size(); ++i) {
-            a->push_back(root->ptr[i]->c);
-            if (root->ptr[i]->ptr.empty())
-                return *a;
-            Perm(root->ptr[i], a);
-            if (a->size() != 1)
-                vec.push_back(*a);
-            for (int g = 0; g < a->size(); ++g)
-                a->pop_back();
+    void findPerms(Node* root, std::vector<char> vec) {
+        if (!root->isRoot)
+            vec.push_back(root->val);
+        if (root->pointers.empty()) {
+            perms.push_back(vec);
+        } else {
+            for (Node* child : root->pointers) {
+                findPerms(child, vec);
+            }
         }
-        return *a;
     }
+
  public:
-        explicit Tree(std::vector<char> vec): root(nullptr) {
-        root = create(root, vec);
-        std::vector<char> b;
-        Perm(root, &b);
+    explicit Tree(const std::vector<char>& vec) {
+        root = new Node;
+        root->isRoot = true;
+        insert(root, vec);
+        std::vector<char> current;
+        findPerms(root, current);
     }
-    std::vector<char> perm(int n) const {
-        if (vec.size() < n)
-            return std::vector<char>();
-        return vec[n];
+    std::vector<std::vector<char>> getPermutations() const {
+        return perms;
     }
 };
 #endif  // INCLUDE_TREE_H_
